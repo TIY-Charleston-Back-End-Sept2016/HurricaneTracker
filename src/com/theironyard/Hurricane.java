@@ -8,17 +8,21 @@ public class Hurricane {
         ONE, TWO, THREE, FOUR, FIVE
     }
 
+    int id;
     String name;
     String location;
     Category category;
     String image;
     User user;
+    boolean isMe;
 
-    public Hurricane(String name, String location, Category category, String image, User user) {
+    public Hurricane(int id, String name, String location, Category category, String image, User user, boolean isMe) {
+        this.id = id;
         this.name = name;
         this.location = location;
         this.category = category;
         this.image = image;
         this.user = user;
+        this.isMe = isMe;
     }
 }

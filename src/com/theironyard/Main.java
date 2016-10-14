@@ -25,6 +25,9 @@ public class Main {
                     if (user != null) {
                         m.put("name", user.name);
                     }
+                    for (Hurricane h : hurricanes) {
+                        h.isMe = user != null && h.user.name.equals(user.name);
+                    }
                     m.put("hurricanes", hurricanes);
                     return new ModelAndView(m, "home.html");
                 },
@@ -79,10 +82,78 @@ public class Main {
                     String hlocation = request.queryParams("hlocation");
                     Hurricane.Category hcategory = Enum.valueOf(Hurricane.Category.class, request.queryParams("hcategory"));
                     String himage = request.queryParams("himage");
-                    Hurricane h = new Hurricane(hname, hlocation, hcategory, himage, user);
+                    Hurricane h = new Hurricane(hurricanes.size(), hname, hlocation, hcategory, himage, user, false);
                     hurricanes.add(h);
 
                     response.redirect("/");
+                    return null;
+                }
+        );
+
+        Spark.post(
+                "/delete-hurricane",
+                (request, response) -> {
+                    Session session = request.session();
+                    String name = session.attribute("loginName");
+                    User user = users.get(name);
+
+                    if (user == null) {
+                        return null;
+                    }
+
+                    int id = Integer.valueOf(request.queryParams("id"));
+
+                    if (hurricanes.get(id) == null || !hurricanes.get(id).isMe) {
+                        return null;
+                    }
+
+                    hurricanes.remove(id);
+                    for (int i = 0; i < hurricanes.size(); i++) {
+                        hurricanes.get(i).id = i;
+                    }
+                    response.redirect("/");
+                    return null;
+                }
+        );
+
+        Spark.get(
+                "/edit-hurricane",
+                (request, response) -> {
+                    int id = Integer.valueOf(request.queryParams("id"));
+                    Hurricane hurricane = hurricanes.get(id);
+                    if (hurricane == null) {
+                        return null;
+                    }
+                    return new ModelAndView(hurricane, "edit.html");
+                },
+                new MustacheTemplateEngine()
+        );
+
+        Spark.post(
+                "/edit-hurricane",
+                (request, response) -> {
+                    Session session = request.session();
+                    String name = session.attribute("loginName");
+                    User user = users.get(name);
+
+                    if (user == null) {
+                        return null;
+                    }
+
+                    int id = Integer.valueOf(request.queryParams("id"));
+
+                    Hurricane hurricane = hurricanes.get(id);
+                    if (hurricane == null || !hurricane.isMe) {
+                        return null;
+                    }
+
+                    hurricane.name = request.queryParams("hname");
+                    hurricane.location = request.queryParams("hlocation");
+                    hurricane.category = Enum.valueOf(Hurricane.Category.class, request.queryParams("hcategory"));
+                    hurricane.image = request.queryParams("himage");
+
+                    response.redirect("/");
+
                     return null;
                 }
         );
